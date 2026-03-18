@@ -57,10 +57,9 @@ envdiff .env.example .env.production --quiet || echo "Env files out of sync!"
 
 ## Features
 
-- 🎨 Colored terminal output
-- 🔒 Auto-masks sensitive values (tokens, API keys)
-- 📋 Clean summary of differences
-- 🚀 Zero dependencies
+- Coloured terminal output
+- Auto-masks sensitive values (tokens, API keys)
+- 🚀 Clean summary of differences
 - ✅ Exit codes for CI/CD integration
 
 ## License
