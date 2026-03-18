@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/envdiff"
+
+options = { color: true }
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: envdiff FILE1 FILE2 [options]"
+  opts.separator ""
+  opts.separator "Compare .env files and show differences"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("--no-color", "Disable colored output") do
+    options[:color] = false
+  end
+
+  opts.on("-q", "--quiet", "Only show if files differ (exit code)") do
+    options[:quiet] = true
+  end
+
+  opts.on("-v", "--version", "Show version") do
+    puts "envdiff #{Envdiff::VERSION}"
+    exit
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end
+
+parser.parse!
+
+if ARGV.length < 2
+  puts parser
+  exit 1
+end
+
+left_file = ARGV[0]
+right_file = ARGV[1]
+
+[left_file, right_file].each do |file|
+  unless File.exist?(file)
+    warn "Error: File not found: #{file}"
+    exit 1
+  end
+end
+
+left = Envdiff::Parser.new(left_file).parse
+right = Envdiff::Parser.new(right_file).parse
+
+result = Envdiff::Comparator.new(left, right).compare
+
+if options[:quiet]
+  has_diff = result.only_in_left.any? || result.only_in_right.any? || result.different_values.any?
+  exit(has_diff ? 1 : 0)
+end
+
+formatter = Envdiff::Formatter.new(
+  result,
+  left_name: File.basename(left_file),
+  right_name: File.basename(right_file),
+  color: options[:color]
+)
+
+puts formatter.format
